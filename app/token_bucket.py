@@ -34,12 +34,13 @@ class token_bucket:
                 end
             end
 
+            redis.call('EXPIRE', key, math.ceil(capacity / refill_rate)) --would need to run unconditionally for each invocation of the script
+
             --eval request
             if tokens >= requested then
                 tokens = tokens - requested
                 redis.call('HMSET',key,'tokens', tokens, 'last_updated', last_updated)
                 -- keep the key alive for cleanup if inactive
-                redis.call('EXPIRE', key, math.ceil(capacity / refill_rate))
                 return {1, tokens} -- allowed
             else
                 redis.call('HMSET',key,'tokens', tokens, 'last_updated', last_updated)
@@ -47,11 +48,11 @@ class token_bucket:
             end
         """)
 
-    def is_allowed(self, key: str, capacity: int, refill_rate: float, requested: int = 1) -> tuple[bool, float]:
+    def isAllowed(self, key: str, capacity: int, refillRate: float, requested: int = 1) -> tuple[bool, float]:
         """
         Check if a request can be filled
-        - key: unique id 
-        - capacity: how many the pool can provide 
+        - key: unique id
+        - capacity: how many the pool can provide
         - refill rate: number of tokens added per second
         - requested: token cost for this action
         - returns (is_allowed, remaining_token s) --> needs it for similar syntax for the lua scripts
@@ -60,7 +61,7 @@ class token_bucket:
         now = time.time()
         allowed, remaining_tokens = self.lua_script(
             keys = [key],
-            args = [capacity,refill_rate,now, requested]
+            args = [capacity,refillRate,now, requested]
         )
 
         return bool(allowed), float(remaining_tokens)
