@@ -4,13 +4,13 @@ import time
 #creates a local host client
 r = redis.Redis(host = "localhost", port = 6379, decode_responses=True)
 
-from app.token_bucket import token_bucket #import the token_bucket.py file
+from app.token_bucket import TokenBucket #import the token_bucket.py file
 
 #confirms that we can fill up the capacity properly and the {bool, float} returns of isAllowed are valid
 def test_allows_up_to_capacity():
     r.delete("test_capacity_key")
     
-    bucket = token_bucket(r)
+    bucket = TokenBucket(r)
     for i in range(5):
         allowed, remaining = bucket.isAllowed("test_capacity_key", 5, .01, 1)
         assert allowed is True
@@ -23,7 +23,7 @@ def test_allows_up_to_capacity():
 def test_capacity_then_refill():
     r.delete("test_capacity_reject_after")
 
-    bucket = token_bucket(r)
+    bucket = TokenBucket(r)
     for i in range(5):
         allowed, remaining = bucket.isAllowed("test_capacity_reject_after", 5, 10, 1)
         assert allowed is True
@@ -40,7 +40,7 @@ from unittest.mock import patch
 
 def test_capacity_then_refill_mock():
     r.delete("test_capacity_reject_after_mockclock")
-    bucket = token_bucket(r)
+    bucket = TokenBucket(r)
 
     fake_now = 1000.0
     with patch("time.time", return_value=fake_now):
@@ -59,7 +59,7 @@ def test_capacity_then_refill_mock():
 #request larger than the capacity --> should deny forever
 def test_request_more_than_capacity():
     r.delete("test_request_more_than_capacity")
-    bucket = token_bucket(r)
+    bucket = TokenBucket(r)
     for i in range(5):
         allowed, remaining = bucket.isAllowed("test_request_more_than_capacity", 5, 1, 10)
         assert allowed is False
@@ -68,7 +68,7 @@ def test_request_more_than_capacity():
 #request > 1
 def test_request_greater_one():
     r.delete("test_request_greater_than_one")
-    bucket = token_bucket(r)
+    bucket = TokenBucket(r)
 
     expected_tokens = 5 #simulate token count to compare with actual
     for i in range(5):
@@ -83,7 +83,7 @@ def test_request_greater_one():
 #partial refill --> less time passes than needed to fully refill to capacity
 def test_partial_refill():
     r.delete("test_partial_refill")
-    bucket = token_bucket(r)
+    bucket = TokenBucket(r)
 
     fake_now = 1000.0
     with patch("time.time", return_value=fake_now):

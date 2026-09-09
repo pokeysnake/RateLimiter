@@ -2,7 +2,7 @@ import time
 import redis
 
 
-class token_bucket:
+class TokenBucket:
 
 
 
