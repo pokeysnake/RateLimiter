@@ -24,7 +24,7 @@ def test_boundary_burst_comparison():
     with patch("time.time", return_value=fake_now):
         bucket_allowed_first = 0
         for i in range(capacity):
-            allowed, _ = bucket.isAllowed(
+            allowed, _ = bucket.is_allowed(
                 "test_boundary_bucket", capacity, refill_rate, 1
             )
             if allowed:
@@ -46,7 +46,7 @@ def test_boundary_burst_comparison():
     with patch("time.time", return_value=fake_now + 0.001):
         bucket_allowed_second = 0
         for i in range(capacity):
-            allowed, _ = bucket.isAllowed(
+            allowed, _ = bucket.is_allowed(
                 "test_boundary_bucket", capacity, refill_rate, 1
             )
             if allowed:

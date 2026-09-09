@@ -4,9 +4,7 @@ import redis
 
 class TokenBucket:
 
-
-
-    def __init__(self, redis_client : redis.Redis):
+    def __init__(self, redis_client: redis.Redis):
         self.redis = redis_client
 
         self.lua_script = self.redis.register_script("""
@@ -48,7 +46,9 @@ class TokenBucket:
             end
         """)
 
-    def isAllowed(self, key: str, capacity: int, refillRate: float, requested: int = 1) -> tuple[bool, float]:
+    def is_allowed(
+        self, key: str, capacity: int, refillRate: float, requested: int = 1
+    ) -> tuple[bool, float]:
         """
         Check if a request can be filled
         - key: unique id
@@ -60,10 +60,7 @@ class TokenBucket:
 
         now = time.time()
         allowed, remaining_tokens = self.lua_script(
-            keys = [key],
-            args = [capacity,refillRate,now, requested]
+            keys=[key], args=[capacity, refillRate, now, requested]
         )
 
         return bool(allowed), float(remaining_tokens)
-
-    

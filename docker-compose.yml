@@ -1,0 +1,37 @@
+services:
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: ratelimiter
+      POSTGRES_DB: ratelimiter
+    ports:
+      - "5433:5432"
+
+  app1:
+    build: .
+    ports:
+      - "8001:8000"
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DATABASE_URL: postgresql+psycopg2://postgres:ratelimiter@postgres:5432/ratelimiter
+    depends_on:
+      - redis
+      - postgres
+
+  app2:
+    build: .
+    ports:
+      - "8002:8000"
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DATABASE_URL: postgresql+psycopg2://postgres:ratelimiter@postgres:5432/ratelimiter
+    depends_on:
+      - redis
+      - postgres

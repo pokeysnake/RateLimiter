@@ -2,6 +2,7 @@ import time
 import uuid
 import redis
 
+
 class SlidingWindow:
 
     LUA_SLIDING_WINDOW = """
@@ -38,7 +39,9 @@ class SlidingWindow:
         self.redis = redis_client
         self.lua_script = self.redis.register_script(self.LUA_SLIDING_WINDOW)
 
-    def is_allowed(self, client_id:str, capacity: int, window_seconds: int) -> tuple[bool, float]:
+    def is_allowed(
+        self, client_id: str, capacity: int, window_seconds: int
+    ) -> tuple[bool, float]:
         """
         checks if a lcient is allowed to proceed based off the rate limit of a rolling window
 
@@ -50,15 +53,13 @@ class SlidingWindow:
         """
         key = f"rate_limit:{client_id}"
         now = time.time()
-        #generate a unique string to ensure identical timestamps dont overwrite each other
+        # generate a unique string to ensure identical timestamps dont overwrite each other
         request_id = f"{now}:{uuid.uuid4().hex}"
 
         # execute the registered script
         # script returns {1, 0} for allowed, or {0, retry_after} for denied
         allowed, retry_after = self.lua_script(
-            keys = [key],
-            args = [now,window_seconds,capacity,request_id]
+            keys=[key], args=[now, window_seconds, capacity, request_id]
         )
 
         return bool(allowed), float(retry_after)
-        
