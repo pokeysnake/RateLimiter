@@ -121,3 +121,28 @@ def test_burst_capacity_exploit():
         allowed, retry_after = limiter.is_allowed("test_burst", 5, 10)
         assert allowed is False
         assert retry_after > 0
+
+
+def test_burst_allowed_after_capacity():
+    r.delete("test_burst_continued")
+    limiter = SlidingWindow(r)
+
+    fake_now = 1000.0
+
+    with patch("time.time", return_value=fake_now):
+        for i in range(5):
+            allowed, retry_after = limiter.is_allowed("test_burst_continued", 5, 10)
+            assert allowed is True
+            assert retry_after == 0
+
+    with patch("time.time", return_value=fake_now + 1):
+        for i in range(5):
+            allowed, retry_after = limiter.is_allowed("test_burst_continued", 5, 10)
+            assert allowed is False
+            assert retry_after > 0
+
+    with patch("time.time", return_value=fake_now + 10):
+        for i in range(5):
+            allowed, retry_after = limiter.is_allowed("test_burst_continued", 5, 10)
+            assert allowed is True
+            assert retry_after == 0
